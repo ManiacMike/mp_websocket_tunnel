@@ -16,20 +16,23 @@ type ApiServer struct {
 	tcKey   string
 }
 
-// type ApiRequest struct{
-// 	data string
-// 	tcId string
-// 	tcKey string
-// 	signature string
-// }
+type ApiParams struct{
+	data string
+	tcId string
+	tcKey string
+	signature string
+}
 
 func (this *ApiServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	if err := this.CheckParams(r); err != nil {
+	err, apiParams := this.CheckParams(r);
+
+	if  err != nil {
 		returnMsg := fmt.Sprintf("{\"code\":400,\"msg\":\"%v\",\"time\":%v}", err.Error(), time.Now().Unix())
 		fmt.Fprint(w, returnMsg)
 		return
 	}
 
+	fmt.Println(apiParams)
 	switch this.apiName {
 	case "get-wsurl":
 		this.GetWsurl(w, r)
@@ -40,7 +43,7 @@ func (this *ApiServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (this *ApiServer) CheckParams(r *http.Request) error {
+func (this *ApiServer) CheckParams(r *http.Request) (error, *ApiParams) {
 	result, _:= ioutil.ReadAll(r.Body)
 	r.Body.Close()
 	fmt.Println(result)
@@ -53,16 +56,25 @@ func (this *ApiServer) CheckParams(r *http.Request) error {
 	fmt.Println(m)
 
 	if m["tcId"] == nil || m["tcId"].(string) == ""{
-		return Error("tcId missing")
+		return Error("tcId missing"), nil
 	}
 	tcId := m["tcId"].(string)
 	if m["signature"] == nil || m["signature"].(string) == ""{
-		return Error("signature missing")
+		return Error("signature missing"), nil
 	}
-	fmt.Println(tcId)
 	signature := m["signature"].(string)
-	fmt.Println(signature)
-	return nil
+
+	tcKey := ""
+	if m["tcKey"] != nil{
+		tcKey = m["tcKey"].(string) 
+	}
+
+	data := ""
+	if m["data"] != nil{
+		data = m["data"].(string)
+	}
+	apiParams := &ApiParams{tcId: tcId, signature: signature, tcKey: tcKey, data: data}
+	return nil, apiParams
 }
 
 
