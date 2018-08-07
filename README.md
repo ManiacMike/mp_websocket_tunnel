@@ -19,7 +19,8 @@
     参数：
         data:
             tunnelIds: wss
-            receiveUrl : https://www.24dota.com/tunnel/
+            type : message
+            content : hello world
         tcId
         signature
 

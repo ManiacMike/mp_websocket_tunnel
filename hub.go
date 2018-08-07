@@ -11,7 +11,22 @@ import (
 
 // Hub maintains the set of active clients and broadcasts messages to the
 // clients.
+
+type TunnelId struct {
+
+	//used by any clients
+	active bool
+
+	//create time
+	createTime uint
+
+	//updated when disconnected or create
+	lastActiveTime uint
+}
+
 type Hub struct {
+	tunnelIdPool map[string]*TunnelId
+
 	// Registered clients.
 	clients map[*Client]bool
 
@@ -31,6 +46,7 @@ func newHub() *Hub {
 		register:   make(chan *Client),
 		unregister: make(chan *Client),
 		clients:    make(map[*Client]bool),
+		tunnelIdPool: make(map[string]*TunnelId),
 	}
 }
 

@@ -43,12 +43,11 @@ func main() {
 		serveWs(hub, w, r)
 	})
 	
-	// http.Handle("/api/create-channel", &ApiServer{ApiName: "create-channel"}) //create a ChannelService
-	// http.Handle("/api/push", &ApiServer{ApiName: "push"})
-	// http.Handle("/api/broadcast", &ApiServer{ApiName: "broadcast"})
-	// http.Handle("/api/get-channel", &ApiServer{ApiName: "get-channel"})
-	// http.Handle("/api/close-channel", &ApiServer{ApiName: "close-channel"}) //close a specific ChannelService
-	// http.Handle("/api/app-status", &ApiServer{ApiName: "app-status"})       //online num and live connection num
+	tcId := "id_test"
+	tcKey := "key_test"
+
+	http.Handle("/get/wsurl", &ApiServer{apiName: "get-wsurl", tcId: tcId, tcKey: tcKey})
+	http.Handle("/ws/push", &ApiServer{apiName: "ws-push", tcId: tcId, tcKey: tcKey})
 
 	fmt.Println("listen on port 8002")
 	//TODO offer a init commad to reload application info file
