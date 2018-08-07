@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"net/http"
 	"time"
+	"io/ioutil"
+	"encoding/json"
 	// "strings"
 )
 
@@ -13,6 +15,13 @@ type ApiServer struct {
 	tcId    string
 	tcKey   string
 }
+
+// type ApiRequest struct{
+// 	data string
+// 	tcId string
+// 	tcKey string
+// 	signature string
+// }
 
 func (this *ApiServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if err := this.CheckParams(r); err != nil {
@@ -32,14 +41,27 @@ func (this *ApiServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (this *ApiServer) CheckParams(r *http.Request) error {
-	tcId := r.PostFormValue("tcId")
-	if tcId == "" {
+	result, _:= ioutil.ReadAll(r.Body)
+	r.Body.Close()
+	fmt.Println(result)
+
+
+	var f interface{}
+	json.Unmarshal(result, &f) 
+	m := f.(map[string]interface{})
+
+	fmt.Println(m)
+
+	if m["tcId"] == nil || m["tcId"].(string) == ""{
 		return Error("tcId missing")
 	}
-	signature := r.PostFormValue("signature")
-	if signature == "" {
+	tcId := m["tcId"].(string)
+	if m["signature"] == nil || m["signature"].(string) == ""{
 		return Error("signature missing")
 	}
+	fmt.Println(tcId)
+	signature := m["signature"].(string)
+	fmt.Println(signature)
 	return nil
 }
 
