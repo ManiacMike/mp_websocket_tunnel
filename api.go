@@ -102,11 +102,11 @@ func (this *ApiServer) GetWsurl(w http.ResponseWriter, r *ApiParams) error {
 
 	dataNode := JsonDecode(r.data)
 	data := dataNode.(map[string]interface{})
-	protocol := data["protocol"].(string)
+	protocol := data["protocolType"].(string)
 	// receiveUrl := data["receiveUrl"].(string)
 	token := GenerateUnixNanoId()
 	fmt.Println("token: ", token)
-	url := fmt.Sprintf("\"%v://ws.24dota.com/?token=%v\"", protocol, token)
+	url := fmt.Sprintf("\"%v:/"+ *wsdomain +"/?token=%v\"", protocol, token)
 	this.hub.addTunnelId(token)
 	// channelService := ChannelService{Uid: uid, Token: token}
 	// applications[appId].Services[uid] = channelService
