@@ -76,7 +76,7 @@ func (c *Client) readPump() {
 		
 		fmt.Println("message:" + string(message))
 		if string(message) == "ping"{
-			c.conn.WriteMessage(websocket.PongMessage, []byte("pong"))
+			c.send <- []byte("pong")
 		}
 		// c.hub.broadcast <- message
 	}
