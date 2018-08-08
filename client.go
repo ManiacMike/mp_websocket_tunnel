@@ -65,7 +65,7 @@ func (c *Client) readPump() {
 	c.conn.SetReadDeadline(time.Now().Add(pongWait))
 	c.conn.SetPongHandler(func(string) error { c.conn.SetReadDeadline(time.Now().Add(pongWait)); return nil })
 	for {
-		messageType, message, err := c.conn.ReadMessage()
+		_, message, err := c.conn.ReadMessage()
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
 				log.Printf("error: %v", err)
@@ -74,9 +74,9 @@ func (c *Client) readPump() {
 		}
 		message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
 		
-		fmt.Println("messageType:" + string(messageType))
-		if messageType == websocket.PingMessage{
-			c.conn.WriteMessage(websocket.PongMessage, nil)
+		fmt.Println("message:" + string(message))
+		if string(message) == "ping"{
+			c.conn.WriteMessage(websocket.PongMessage, []byte("pong"))
 		}
 		// c.hub.broadcast <- message
 	}
