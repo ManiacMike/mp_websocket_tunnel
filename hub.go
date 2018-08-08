@@ -51,19 +51,19 @@ func newHub() *Hub {
 	}
 }
 
-func (h *Hub) addTunnelId(token string){
+func (h *Hub) addTunnelId(tunnelIdStr string){
 	tunnelId := &TunnelId{
 		active:  false,
 		createTime: time.Now().Unix(),
 		lastActiveTime: time.Now().Unix(),
 	}
-	h.tunnelIdPool[token] = tunnelId
+	h.tunnelIdPool[tunnelIdStr] = tunnelId
 }
 
-func (h *Hub) checkTunnelId(token string) int {
-	if h.tunnelIdPool[token] == nil{
+func (h *Hub) checkTunnelId(tunnelId string) int {
+	if h.tunnelIdPool[tunnelId] == nil{
 		return 0
-	}else if h.tunnelIdPool[token].active == false{
+	}else if h.tunnelIdPool[tunnelId].active == false{
 		return 1
 	}else{
 		return 2

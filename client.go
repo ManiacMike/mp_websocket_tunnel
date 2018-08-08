@@ -127,9 +127,9 @@ func serveWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 		return
 	}
-	token := r.FormValue("token")
-	tokenCheck := hub.checkTunnelId(token)
-	if tokenCheck == 0{
+	tunnelId := r.FormValue("tunnelId")
+	tunnelIdCheck := hub.checkTunnelId(tunnelId)
+	if tunnelIdCheck == 0{
 		conn.Close()
 	}else{
 		client := &Client{hub: hub, conn: conn, send: make(chan []byte, 256)}
