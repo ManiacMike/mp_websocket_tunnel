@@ -6,11 +6,14 @@ import (
 	"time"
 	"io/ioutil"
 	"encoding/json"
+	"crypto/sha1"
+	"encoding/hex"
 	// "strings"
 )
 
 
 type ApiServer struct {
+	hub *Hub
 	apiName string
 	tcId    string
 	tcKey   string
@@ -35,19 +38,24 @@ func (this *ApiServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	fmt.Println(apiParams)
 	switch this.apiName {
 	case "get-wsurl":
-		this.GetWsurl(w, r)
+		err = this.GetWsurl(w, apiParams)
 	case "ws-push":
-		this.WsPush(w, r)
+		err = this.WsPush(w, apiParams)
 	default:
 		fmt.Fprint(w, "Invalid api")
+	}
+
+	if  err != nil {
+		returnMsg := fmt.Sprintf("{\"code\":400,\"msg\":\"%v\",\"time\":%v}", err.Error(), time.Now().Unix())
+		fmt.Fprint(w, returnMsg)
+		return
 	}
 }
 
 func (this *ApiServer) CheckParams(r *http.Request) (error, *ApiParams) {
 	result, _:= ioutil.ReadAll(r.Body)
 	r.Body.Close()
-	fmt.Println(result)
-
+	// fmt.Println(result)
 
 	var f interface{}
 	json.Unmarshal(result, &f) 
@@ -73,23 +81,33 @@ func (this *ApiServer) CheckParams(r *http.Request) (error, *ApiParams) {
 	if m["data"] != nil{
 		data = m["data"].(string)
 	}
+
+	h := sha1.New()
+	h.Write([]byte(data + this.tcKey))
+	signatureCompute := hex.EncodeToString(h.Sum(nil))
+
+	fmt.Println(data + this.tcKey + "\n")
+	fmt.Println(signatureCompute + "\n")
+
+	if signatureCompute != signature{
+		return Error("signature error"), nil
+	}
+
 	apiParams := &ApiParams{tcId: tcId, signature: signature, tcKey: tcKey, data: data}
 	return nil, apiParams
 }
 
 
-func (this *ApiServer) GetWsurl(w http.ResponseWriter, r *http.Request) error {
-	tcKey := r.PostFormValue("tcKey")
-	if tcKey == "" {
-		return Error("tcKey missing")
-	}
-	dataNode := JsonDecode(r.PostFormValue("data"))
+func (this *ApiServer) GetWsurl(w http.ResponseWriter, r *ApiParams) error {
+
+	dataNode := JsonDecode(r.data)
 	data := dataNode.(map[string]interface{})
 	protocol := data["protocol"].(string)
 	// receiveUrl := data["receiveUrl"].(string)
 	token := GenerateUnixNanoId()
 	fmt.Println("token: ", token)
 	url := fmt.Sprintf("\"%v://ws.24dota.com/?token=%v\"", protocol, token)
+	this.hub.addTunnelId(token)
 	// channelService := ChannelService{Uid: uid, Token: token}
 	// applications[appId].Services[uid] = channelService
 	// msg := fmt.Sprintf("{\"uid\":\"%v\",\"token\":\"%v\"}", channelService.Uid, channelService.Token)
@@ -97,7 +115,7 @@ func (this *ApiServer) GetWsurl(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
-func (this *ApiServer) WsPush(w http.ResponseWriter, r *http.Request) error {
+func (this *ApiServer) WsPush(w http.ResponseWriter, r *ApiParams) error {
 
 	return nil
 }

@@ -2,9 +2,12 @@ package main
 
 import (
 	"fmt"
+	"encoding/hex"
 	// "github.com/gorilla/websocket"
 	"log"
 	"net/http"
+	"flag"
+	"crypto/md5"
 	// "net/url"
 	// "github.com/larspensjo/config"
 	// "strconv"
@@ -30,12 +33,18 @@ func StaticServer(w http.ResponseWriter, req *http.Request) {
 	return
 }
 
+var host = flag.String("h", "127.0.0.1", "http service host")
+var port = flag.String("p", "8002", "http service port")
+var tcKey = flag.String("k", "", "sign key")
+
 func main() {
 
 	var err error
 
-	fmt.Println("浏览器访问 http://yourhost:port/chat")
-	http.HandleFunc("/chat", StaticServer)
+	// fmt.Println("浏览器访问 http://yourhost:port/chat")
+	// http.HandleFunc("/chat", StaticServer)
+
+	flag.Parse()
 
 	hub := newHub()
 	go hub.run()
@@ -43,22 +52,18 @@ func main() {
 		serveWs(hub, w, r)
 	})
 	
-	tcId := "id_test"
-	tcKey := "key_test"
+	tcId := "http://" + *host + ":" + *port
+	h := md5.New()
+	h.Write([]byte(tcId))
+	tcId = hex.EncodeToString(h.Sum(nil))
 
-	http.Handle("/get/wsurl", &ApiServer{apiName: "get-wsurl", tcId: tcId, tcKey: tcKey})
-	http.Handle("/ws/push", &ApiServer{apiName: "ws-push", tcId: tcId, tcKey: tcKey})
+	fmt.Println("tcKey:" + *tcKey)
+	http.Handle("/get/wsurl", &ApiServer{hub: hub, apiName: "get-wsurl", tcId: tcId, tcKey: *tcKey})
+	http.Handle("/ws/push", &ApiServer{hub: hub, apiName: "ws-push", tcId: tcId, tcKey: *tcKey})
 
-	fmt.Println("listen on port 8002")
-	//TODO offer a init commad to reload application info file
-	// applications = make(ApplicationGroup)
-	// applications_config = make(ApplicationGroupConfig)
+	fmt.Println("listen on port " + *port)
 
-	// if err = initServer(); err != nil {
-	// 	panic(err.Error())
-	// }
-
-	if err = http.ListenAndServe(":8002", nil); err != nil {
+	if err = http.ListenAndServe(":" + *port, nil); err != nil {
 		log.Fatal("ListenAndServe:", err)
 	}
 }

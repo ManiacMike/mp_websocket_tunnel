@@ -7,6 +7,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"time"
 )
 
 // Hub maintains the set of active clients and broadcasts messages to the
@@ -18,10 +19,10 @@ type TunnelId struct {
 	active bool
 
 	//create time
-	createTime uint
+	createTime int64
 
 	//updated when disconnected or create
-	lastActiveTime uint
+	lastActiveTime int64
 }
 
 type Hub struct {
@@ -48,6 +49,26 @@ func newHub() *Hub {
 		clients:    make(map[*Client]bool),
 		tunnelIdPool: make(map[string]*TunnelId),
 	}
+}
+
+func (h *Hub) addTunnelId(token string){
+	tunnelId := &TunnelId{
+		active:  false,
+		createTime: time.Now().Unix(),
+		lastActiveTime: time.Now().Unix(),
+	}
+	h.tunnelIdPool[token] = tunnelId
+}
+
+func (h *Hub) checkTunnelId(token string) int {
+	if h.tunnelIdPool[token] == nil{
+		return 0
+	}else if h.tunnelIdPool[token].active == false{
+		return 1
+	}else{
+		return 2
+	}
+
 }
 
 func (h *Hub) run() {
