@@ -9,7 +9,7 @@ import (
 	"log"
 	"net/http"
 	"time"
-
+	"fmt"
 	"github.com/gorilla/websocket"
 )
 
@@ -129,6 +129,7 @@ func serveWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
 	}
 	tunnelId := r.FormValue("tunnelId")
 	tunnelIdCheck := hub.checkTunnelId(tunnelId)
+	fmt.Println("tunnelIdCheck : " + tunnelId + "|" + string(tunnelIdCheck))
 	if tunnelIdCheck == 0{
 		conn.Close()
 	}else{
