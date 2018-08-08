@@ -109,7 +109,7 @@ func (this *ApiServer) GetWsurl(w http.ResponseWriter, r *ApiParams) error {
 
 	returnDataMap := map[string]string{"tunnelId": tunnelId, "connectUrl": url}
 	returnData := JsonEncode(returnDataMap)
-	result := map[string]string{"code": "0", "data": returnData, "signature": sha1Encode(returnData + this.tcKey)}
+	result := map[string]interface{}{"code": 0, "data": returnData, "signature": sha1Encode(returnData + this.tcKey)}
 	this.Success(result, w)
 	return nil
 }
