@@ -6,8 +6,8 @@ import (
 	"time"
 	"io/ioutil"
 	"encoding/json"
-	"crypto/sha1"
-	"encoding/hex"
+	// "crypto/sha1"
+	// "encoding/hex"
 	// "strings"
 )
 
@@ -82,9 +82,7 @@ func (this *ApiServer) CheckParams(r *http.Request) (error, *ApiParams) {
 		data = m["data"].(string)
 	}
 
-	h := sha1.New()
-	h.Write([]byte(data + this.tcKey))
-	signatureCompute := hex.EncodeToString(h.Sum(nil))
+	signatureCompute := sha1Encode(data + this.tcKey)
 
 	fmt.Println(data + this.tcKey + "\n")
 	fmt.Println(signatureCompute + "\n")
@@ -104,14 +102,15 @@ func (this *ApiServer) GetWsurl(w http.ResponseWriter, r *ApiParams) error {
 	data := dataNode.(map[string]interface{})
 	protocol := data["protocolType"].(string)
 	// receiveUrl := data["receiveUrl"].(string)
-	token := GenerateUnixNanoId()
-	fmt.Println("token: ", token)
-	url := fmt.Sprintf("\"%v:/"+ *wsdomain +"/?token=%v\"", protocol, token)
-	this.hub.addTunnelId(token)
-	// channelService := ChannelService{Uid: uid, Token: token}
-	// applications[appId].Services[uid] = channelService
-	// msg := fmt.Sprintf("{\"uid\":\"%v\",\"token\":\"%v\"}", channelService.Uid, channelService.Token)
-	this.Success(url, w)
+	tunnelId := GenerateUnixNanoId()
+	fmt.Println("tunnelId: ", tunnelId)
+	url := fmt.Sprintf("%v://"+ *wsdomain +"/?tunnelId=%v", protocol, tunnelId)
+	this.hub.addTunnelId(tunnelId)
+
+	returnDataMap := map[string]string{"tunnelId": tunnelId, "connectUrl": url}
+	returnData := JsonEncode(returnDataMap)
+	result := map[string]string{"data": returnData, "signature": sha1Encode(returnData + this.tcKey)}
+	this.Success(result, w)
 	return nil
 }
 
@@ -122,10 +121,7 @@ func (this *ApiServer) WsPush(w http.ResponseWriter, r *ApiParams) error {
 
 
 
-func (this *ApiServer) Success(msg string, w http.ResponseWriter) {
-	if msg == "" {
-		msg = "\"success\""
-	}
-	returnMsg := fmt.Sprintf("{\"code\":0,\"result\":%v}", msg)
+func (this *ApiServer) Success(result interface{}, w http.ResponseWriter) {
+	returnMsg := JsonEncode(result)
 	fmt.Fprint(w, returnMsg)
 }

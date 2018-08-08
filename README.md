@@ -11,7 +11,8 @@
         signature
 
     返回：
-        wss://ws.24dota.com
+        data : {connectUrl : wss://ws.24dota.com, tunnelId: xxx}
+        signature : xxx
 
 
 2. /ws/push 根据tunnel id，推送内容给ws connection

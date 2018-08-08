@@ -2,11 +2,19 @@ package main
 
 import (
 	"encoding/json"
+	"crypto/sha1"
+	"encoding/hex"
 	"fmt"
 	"strconv"
 	"strings"
 	"time"
 )
+
+func sha1Encode(input string) string{
+	h := sha1.New()
+	h.Write([]byte(input))
+	return hex.EncodeToString(h.Sum(nil))
+}
 
 func GenerateUnixNanoId() string {
 	return strconv.FormatInt(time.Now().UnixNano(), 10)
