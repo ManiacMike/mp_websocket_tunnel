@@ -107,9 +107,9 @@ func (this *ApiServer) GetWsurl(w http.ResponseWriter, r *ApiParams) error {
 	url := fmt.Sprintf("%v://"+ *wsdomain +"/?tunnelId=%v", protocol, tunnelId)
 	this.hub.addTunnelId(tunnelId)
 
-	returnDataMap := map[string]string{"tunnelId": tunnelId, "connectUrl": url, "code": "0"}
+	returnDataMap := map[string]string{"tunnelId": tunnelId, "connectUrl": url}
 	returnData := JsonEncode(returnDataMap)
-	result := map[string]string{"data": returnData, "signature": sha1Encode(returnData + this.tcKey)}
+	result := map[string]string{"code": "0", "data": returnData, "signature": sha1Encode(returnData + this.tcKey)}
 	this.Success(result, w)
 	return nil
 }
