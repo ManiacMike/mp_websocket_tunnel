@@ -74,6 +74,7 @@ func (c *Client) readPump() {
 		}
 		message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
 		
+		fmt.Println("messageType:" + string(messageType))
 		if messageType == websocket.PingMessage{
 			c.conn.WriteMessage(websocket.PongMessage, nil)
 		}
