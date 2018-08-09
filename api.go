@@ -116,11 +116,11 @@ func (this *ApiServer) WsPush(w http.ResponseWriter, r *ApiParams) error {
 	for _, v := range data {
 		vv := v.(map[string]interface{})
 		if vv["type"].(string) == "message"{
-			tunnelIds := vv["tunnelIds"].([]string)
+			tunnelIds := vv["tunnelIds"].([]interface {})
 			for _, tunnelId := range tunnelIds {
-				err := this.hub.sendByTunnelId(tunnelId, "message:" + vv["content"].(string))
+				err := this.hub.sendByTunnelId(tunnelId.(string), "message:" + vv["content"].(string))
 				if err != nil{
-					invalidTunnelIds = append(invalidTunnelIds, tunnelId)
+					invalidTunnelIds = append(invalidTunnelIds, tunnelId.(string))
 				}
 			}
 		}
