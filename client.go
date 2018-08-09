@@ -80,7 +80,7 @@ func (c *Client) readPump() {
 		}else{
 			s := strings.Split(string(message), ":")
 			if s[0] == "message"{
-				c.postToServer("message", s[1])
+				c.postToServer("message", strings.Replace(string(message), "message:", "", 1 ))
 			}
 		}
 		// c.hub.broadcast <- message
