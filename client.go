@@ -142,6 +142,7 @@ func (c *Client) postToServer(){
 	for {
 		select {
 		case poster, ok := <-c.postToServerChan:
+			fmt.Println(poster)
 			if ok{
 				packetType := poster["packetType"]
 				content := poster["content"]
