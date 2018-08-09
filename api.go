@@ -54,7 +54,7 @@ func (this *ApiServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func (this *ApiServer) CheckParams(r *http.Request) (error, *ApiParams) {
 	result, _:= ioutil.ReadAll(r.Body)
 	r.Body.Close()
-	fmt.Println(result)
+	fmt.Println("api receiving: " + string(result))
 
 	var f interface{}
 	json.Unmarshal(result, &f) 
@@ -97,7 +97,7 @@ func (this *ApiServer) GetWsurl(w http.ResponseWriter, r *ApiParams) error {
 	protocol := data["protocolType"].(string)
 	// receiveUrl := data["receiveUrl"].(string)
 	tunnelId := GenerateUnixNanoId()
-	fmt.Println("tunnelId: ", tunnelId)
+	fmt.Println("GetWsurl tunnelId: ", tunnelId)
 	url := fmt.Sprintf("%v://"+ *wsdomain +"/?tunnelId=%v", protocol, tunnelId)
 	this.hub.addTunnelId(tunnelId)
 

@@ -74,7 +74,7 @@ func (c *Client) readPump() {
 		}
 		message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
 		
-		fmt.Println("message:" + string(message))
+		fmt.Println("readPump: " + string(message))
 		if string(message) == "ping"{
 			c.send <- []byte("pong")
 		}else{
@@ -139,6 +139,7 @@ func (c *Client) postToServer(packetType string, content string) error{
 		packetMap["content"] = content
 	}
 	dataStr := JsonEncode(packetMap)
+	fmt.Println("postToServerRequest: " + dataStr)
 	signature := sha1Encode(dataStr + *tcKey)
 	payloadMap := map[string]interface{}{"data": dataStr, "signature": signature}
 	responseBody,err := postJson(*receiveUrl, payloadMap)
@@ -146,7 +147,7 @@ func (c *Client) postToServer(packetType string, content string) error{
 		fmt.Println(err)
 		return err
 	}else{
-		fmt.Println(responseBody)
+		fmt.Println("postToServerResponse: " + responseBody)
 		return nil
 	}
 }
