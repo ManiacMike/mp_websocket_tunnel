@@ -67,6 +67,14 @@ func (h *Hub) checkTunnelId(tunnelId string) int {
 
 }
 
+func (h *Hub) sendByTunnelId(tunnelId string, message string) error{
+	if h.tunnelIdPool[tunnelId] == nil || h.tunnelIdPool[tunnelId].active == false{
+		return Error("invalid tunnelId")
+	}
+	h.clients[tunnelId].send <- []byte(message)
+	return nil
+}
+
 func (h *Hub) run() {
 	for {
 		select {

@@ -35,7 +35,6 @@ func (this *ApiServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Println(apiParams)
 	switch this.apiName {
 	case "get-wsurl":
 		err = this.GetWsurl(w, apiParams)
@@ -55,13 +54,11 @@ func (this *ApiServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func (this *ApiServer) CheckParams(r *http.Request) (error, *ApiParams) {
 	result, _:= ioutil.ReadAll(r.Body)
 	r.Body.Close()
-	// fmt.Println(result)
+	fmt.Println(result)
 
 	var f interface{}
 	json.Unmarshal(result, &f) 
 	m := f.(map[string]interface{})
-
-	fmt.Println(m)
 
 	if m["tcId"] == nil || m["tcId"].(string) == ""{
 		return Error("tcId missing"), nil
@@ -83,9 +80,6 @@ func (this *ApiServer) CheckParams(r *http.Request) (error, *ApiParams) {
 	}
 
 	signatureCompute := sha1Encode(data + this.tcKey)
-
-	fmt.Println(data + this.tcKey + "\n")
-	fmt.Println(signatureCompute + "\n")
 
 	if signatureCompute != signature{
 		return Error("signature error"), nil
@@ -116,10 +110,24 @@ func (this *ApiServer) GetWsurl(w http.ResponseWriter, r *ApiParams) error {
 
 func (this *ApiServer) WsPush(w http.ResponseWriter, r *ApiParams) error {
 	dataNode := JsonDecode(r.data)
-	data := dataNode.(map[string]interface{})
-
-	fmt.Println(data)
-
+	data := dataNode.([]interface{})
+	fmt.Println("debug WsPush \n")
+	invalidTunnelIds := []string{}
+	for _, v := range data {
+		vv := v.(map[string]interface{})
+		if vv["type"].(string) == "message"{
+			tunnelIds := vv["tunnelIds"].([]string)
+			for _, tunnelId := range tunnelIds {
+				err := this.hub.sendByTunnelId(tunnelId, "message:" + vv["content"].(string))
+				if err != nil{
+					invalidTunnelIds = append(invalidTunnelIds, tunnelId)
+				}
+			}
+		}
+	}
+	
+	result := map[string]interface{}{"code": 0, "data": map[string]interface{}{"invalidTunnelIds": invalidTunnelIds}}
+	this.Success(result, w)
 	return nil
 }
 

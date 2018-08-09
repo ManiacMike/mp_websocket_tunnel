@@ -38,9 +38,9 @@
 
     参数：
         data:
-            tunnelIds: xxx
+            [tunnelIds: xxx
             type : message
-            content : hello world
+            content : hello world]
         tcId
         signature
 
