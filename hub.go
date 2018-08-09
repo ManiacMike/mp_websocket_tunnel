@@ -1,12 +1,8 @@
-// Copyright 2013 The Gorilla WebSocket Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
-
 package main
 
 import (
-	"encoding/json"
-	"fmt"
+	// "encoding/json"
+	// "fmt"
 	"time"
 )
 
@@ -18,10 +14,10 @@ type TunnelId struct {
 	//used by any clients
 	active bool
 
-	//create time
+	//created time
 	createTime int64
 
-	//updated when disconnected or create
+	//updated when disconnected or created
 	lastActiveTime int64
 }
 
@@ -29,7 +25,7 @@ type Hub struct {
 	tunnelIdPool map[string]*TunnelId
 
 	// Registered clients.
-	clients map[*Client]bool
+	clients map[string]*Client
 
 	// Inbound messages from the clients.
 	broadcast chan []byte
@@ -46,7 +42,7 @@ func newHub() *Hub {
 		broadcast:  make(chan []byte),
 		register:   make(chan *Client),
 		unregister: make(chan *Client),
-		clients:    make(map[*Client]bool),
+		clients:    make(map[string]*Client),
 		tunnelIdPool: make(map[string]*TunnelId),
 	}
 }
@@ -75,49 +71,52 @@ func (h *Hub) run() {
 	for {
 		select {
 		case client := <-h.register:
-			welcomeMessage := []byte("hello")
-			client.send <- welcomeMessage
-			h.clients[client] = true
-			userCountMessage := map[string]interface{}{
-				"type":       "user_count",
-				"user_count": len(h.clients),
-			}
-			userCountMessagebody, _ := json.Marshal(userCountMessage)
-			fmt.Println(userCountMessage)
-			for client := range h.clients {
-				select {
-				case client.send <- userCountMessagebody:
-				default:
-					close(client.send)
-					delete(h.clients, client)
-				}
-			}
+			// welcomeMessage := []byte("hello")
+			// client.send <- welcomeMessage
+			h.clients[client.tunnelId] = client
+			h.tunnelIdPool[client.tunnelId].active = true
+			// userCountMessage := map[string]interface{}{
+			// 	"type":       "user_count",
+			// 	"user_count": len(h.clients),
+			// }
+			// userCountMessagebody, _ := json.Marshal(userCountMessage)
+			// fmt.Println(userCountMessage)
+			// for client := range h.clients {
+			// 	select {
+			// 	case client.send <- userCountMessagebody:
+			// 	default:
+			// 		close(client.send)
+			// 		delete(h.clients, client)
+			// 	}
+			// }
 		case client := <-h.unregister:
-			if _, ok := h.clients[client]; ok {
-				delete(h.clients, client)
+			tunnelId := client.tunnelId
+			if _, ok := h.clients[tunnelId]; ok {
+				h.tunnelIdPool[tunnelId].active = false
+				delete(h.clients, tunnelId)
 				close(client.send)
 			}
-			userCountMessage := map[string]interface{}{
-				"type":       "user_count",
-				"user_count": len(h.clients),
-			}
-			userCountMessagebody, _ := json.Marshal(userCountMessage)
-			fmt.Println(userCountMessage)
-			for client := range h.clients {
-				select {
-				case client.send <- userCountMessagebody:
-				default:
-					close(client.send)
-					delete(h.clients, client)
-				}
-			}
+			// userCountMessage := map[string]interface{}{
+			// 	"type":       "user_count",
+			// 	"user_count": len(h.clients),
+			// }
+			// userCountMessagebody, _ := json.Marshal(userCountMessage)
+			// fmt.Println(userCountMessage)
+			// for client := range h.clients {
+			// 	select {
+			// 	case client.send <- userCountMessagebody:
+			// 	default:
+			// 		close(client.send)
+			// 		delete(h.clients, client)
+			// 	}
+			// }
 		case message := <-h.broadcast:
-			for client := range h.clients {
+			for _,client := range h.clients {
 				select {
 				case client.send <- message:
 				default:
 					close(client.send)
-					delete(h.clients, client)
+					delete(h.clients, client.tunnelId)
 				}
 			}
 		}

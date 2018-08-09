@@ -1,7 +1,3 @@
-// Copyright 2013 The Gorilla WebSocket Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
-
 package main
 
 import (
@@ -43,6 +39,8 @@ var upgrader = websocket.Upgrader{
 // Client is a middleman between the websocket connection and the hub.
 type Client struct {
 	hub *Hub
+
+	tunnelId string
 
 	// The websocket connection.
 	conn *websocket.Conn
@@ -141,7 +139,7 @@ func serveWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
 	if tunnelIdCheck == 0{
 		conn.Close()
 	}else{
-		client := &Client{hub: hub, conn: conn, send: make(chan []byte, 256)}
+		client := &Client{hub: hub, tunnelId: tunnelId, conn: conn, send: make(chan []byte, 256)}
 		client.hub.register <- client
 
 		// Allow collection of memory referenced by the caller by doing all work in
