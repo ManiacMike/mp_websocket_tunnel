@@ -141,9 +141,8 @@ func (c *Client) postToServer(){
 	//packetType string, content string
 	for {
 		select {
-		case poster, ok := <-c.postToServerChan:
+		case poster := <-c.postToServerChan:
 			fmt.Println(poster)
-			if ok{
 				packetType := poster["packetType"]
 				content := poster["content"]
 				packetMap := map[string]interface{}{"type": packetType, "tunnelId": c.tunnelId}
@@ -162,7 +161,6 @@ func (c *Client) postToServer(){
 					fmt.Println("postToServerResponse: " + responseBody)
 					// return nil
 				}
-			}
 		}
 	}
 
