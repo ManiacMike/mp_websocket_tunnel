@@ -134,10 +134,13 @@ func (c *Client) writePump() {
 }
 
 func (c *Client) postToServer(packetType string, content string) error{
-	payloadMap := map[string]interface{}{"type": packetType, "tunnelId": c.tunnelId}
+	packetMap := map[string]interface{}{"type": packetType, "tunnelId": c.tunnelId}
 	if packetType == "message"{
-		payloadMap["content"] = content
+		packetMap["content"] = content
 	}
+	dataStr := JsonEncode(packetMap)
+	signature := sha1Encode(dataStr + *tcKey)
+	payloadMap := map[string]interface{}{"data": dataStr, "signature": signature}
 	responseBody,err := postJson(*receiveUrl, payloadMap)
 	if err != nil{
 		fmt.Println(err)
