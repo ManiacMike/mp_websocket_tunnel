@@ -103,6 +103,7 @@ func (h *Hub) run() {
 				h.tunnelIdPool[tunnelId].active = false
 				delete(h.clients, tunnelId)
 				close(client.send)
+				close(client.postToServerChan)
 			}
 			// userCountMessage := map[string]interface{}{
 			// 	"type":       "user_count",
