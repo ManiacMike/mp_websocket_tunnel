@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 	"fmt"
+	"strings"
 	"github.com/gorilla/websocket"
 )
 
@@ -56,6 +57,7 @@ type Client struct {
 // reads from this goroutine.
 func (c *Client) readPump() {
 	defer func() {
+		c.postToServer("close", "")
 		c.hub.unregister <- c
 		c.conn.Close()
 	}()
@@ -75,6 +77,11 @@ func (c *Client) readPump() {
 		fmt.Println("message:" + string(message))
 		if string(message) == "ping"{
 			c.send <- []byte("pong")
+		}else{
+			s := strings.Split(string(message), ":")
+			if s[0] == "message"{
+				c.postToServer("message", s[1])
+			}
 		}
 		// c.hub.broadcast <- message
 	}
@@ -126,6 +133,21 @@ func (c *Client) writePump() {
 	}
 }
 
+func (c *Client) postToServer(packetType string, content string) error{
+	payloadMap := map[string]interface{}{"type": packetType, "tunnelId": c.tunnelId}
+	if packetType == "message"{
+		payloadMap["content"] = content
+	}
+	responseBody,err := postJson(*receiveUrl, payloadMap)
+	if err != nil{
+		fmt.Println(err)
+		return err
+	}else{
+		fmt.Println(responseBody)
+		return nil
+	}
+}
+
 // serveWs handles websocket requests from the peer.
 func serveWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
@@ -146,5 +168,6 @@ func serveWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
 		// new goroutines.
 		go client.writePump()
 		go client.readPump()
+		go client.postToServer("connect", "")
 	}
 }

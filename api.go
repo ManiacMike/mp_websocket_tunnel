@@ -115,6 +115,10 @@ func (this *ApiServer) GetWsurl(w http.ResponseWriter, r *ApiParams) error {
 }
 
 func (this *ApiServer) WsPush(w http.ResponseWriter, r *ApiParams) error {
+	dataNode := JsonDecode(r.data)
+	data := dataNode.(map[string]interface{})
+
+	fmt.Println(data)
 
 	return nil
 }

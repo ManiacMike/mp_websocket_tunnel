@@ -37,6 +37,7 @@ var wsdomain = flag.String("d", "127.0.0.1", "ws service host")
 var host = flag.String("h", "127.0.0.1", "http service host")
 var port = flag.String("p", "8002", "http service port")
 var tcKey = flag.String("k", "", "sign key")
+var receiveUrl = flag.String("r", "", "backend receive url")
 
 func main() {
 
@@ -46,6 +47,9 @@ func main() {
 	// http.HandleFunc("/chat", StaticServer)
 
 	flag.Parse()
+	if *receiveUrl == ""{
+		log.Fatal("error : backend receive url must be set,using -r")
+	}
 
 	hub := newHub()
 	go hub.run()

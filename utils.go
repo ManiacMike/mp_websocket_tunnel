@@ -8,7 +8,37 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"io/ioutil"
+	"net/http"
+	"bytes"
 )
+
+
+func postJson(urlstr string, params map[string]interface{}) (string, error) {
+	var err error
+	var resp *http.Response
+	jsonPost := JsonEncode(params)
+	requestBody := bytes.NewBuffer([]byte(jsonPost))
+	request, err := http.NewRequest("POST", urlstr, requestBody)
+	if err != nil {
+		return "", err
+	}
+	request.Header.Set("Content-Type", "application/json;charset=utf-8")
+	client := &http.Client{}
+	resp, err = client.Do(request)
+
+	if err != nil || resp == nil {
+		fmt.Println(err)
+		return "", err
+	}
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	} else {
+		defer resp.Body.Close()
+	}
+	return string(body), nil
+}
 
 func sha1Encode(input string) string{
 	h := sha1.New()
