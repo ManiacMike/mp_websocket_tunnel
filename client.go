@@ -48,6 +48,8 @@ type Client struct {
 
 	// Buffered channel of outbound messages.
 	send chan []byte
+
+	postToServerChan chan map[string]string
 }
 
 // readPump pumps messages from the websocket connection to the hub.
@@ -57,7 +59,7 @@ type Client struct {
 // reads from this goroutine.
 func (c *Client) readPump() {
 	defer func() {
-		c.postToServer("close", "")
+		c.postToServerChan <- map[string]string{"packetType": "close"}
 		c.hub.unregister <- c
 		c.conn.Close()
 	}()
@@ -80,7 +82,8 @@ func (c *Client) readPump() {
 		}else{
 			s := strings.Split(string(message), ":")
 			if s[0] == "message"{
-				c.postToServer("message", strings.Replace(string(message), "message:", "", 1 ))
+				c.postToServerChan <- map[string]string{"packetType": "message", "content": strings.Replace(string(message), "message:", "", 1 )}
+				// c.postToServer("message", strings.Replace(string(message), "message:", "", 1 ))
 			}
 		}
 		// c.hub.broadcast <- message
@@ -133,23 +136,35 @@ func (c *Client) writePump() {
 	}
 }
 
-func (c *Client) postToServer(packetType string, content string) error{
-	packetMap := map[string]interface{}{"type": packetType, "tunnelId": c.tunnelId}
-	if packetType == "message"{
-		packetMap["content"] = content
+func (c *Client) postToServer(){
+
+	//packetType string, content string
+	for {
+		select {
+		case poster, ok := <-c.postToServerChan:
+			if ok{
+				packetType := poster["packetType"]
+				content := poster["content"]
+				packetMap := map[string]interface{}{"type": packetType, "tunnelId": c.tunnelId}
+				if packetType == "message"{
+					packetMap["content"] = content
+				}
+				dataStr := JsonEncode(packetMap)
+				fmt.Println("postToServerRequest: " + dataStr)
+				signature := sha1Encode(dataStr + *tcKey)
+				payloadMap := map[string]interface{}{"data": dataStr, "signature": signature}
+				responseBody,err := postJson(*receiveUrl, payloadMap)
+				if err != nil{
+					fmt.Println(err)
+					// return err
+				}else{
+					fmt.Println("postToServerResponse: " + responseBody)
+					// return nil
+				}
+			}
+		}
 	}
-	dataStr := JsonEncode(packetMap)
-	fmt.Println("postToServerRequest: " + dataStr)
-	signature := sha1Encode(dataStr + *tcKey)
-	payloadMap := map[string]interface{}{"data": dataStr, "signature": signature}
-	responseBody,err := postJson(*receiveUrl, payloadMap)
-	if err != nil{
-		fmt.Println(err)
-		return err
-	}else{
-		fmt.Println("postToServerResponse: " + responseBody)
-		return nil
-	}
+
 }
 
 // serveWs handles websocket requests from the peer.
@@ -172,6 +187,7 @@ func serveWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
 		// new goroutines.
 		go client.writePump()
 		go client.readPump()
-		go client.postToServer("connect", "")
+		go client.postToServer()
+		client.postToServerChan <- map[string]string{"packetType": "connect"}
 	}
 }
