@@ -143,24 +143,24 @@ func (c *Client) postToServer(){
 		select {
 		case poster := <-c.postToServerChan:
 			fmt.Println(poster)
-				packetType := poster["packetType"]
-				content := poster["content"]
-				packetMap := map[string]interface{}{"type": packetType, "tunnelId": c.tunnelId}
-				if packetType == "message"{
-					packetMap["content"] = content
-				}
-				dataStr := JsonEncode(packetMap)
-				fmt.Println("postToServerRequest: " + dataStr)
-				signature := sha1Encode(dataStr + *tcKey)
-				payloadMap := map[string]interface{}{"data": dataStr, "signature": signature}
-				responseBody,err := postJson(*receiveUrl, payloadMap)
-				if err != nil{
-					fmt.Println(err)
-					// return err
-				}else{
-					fmt.Println("postToServerResponse: " + responseBody)
-					// return nil
-				}
+			packetType := poster["packetType"]
+			content := poster["content"]
+			packetMap := map[string]interface{}{"type": packetType, "tunnelId": c.tunnelId}
+			if packetType == "message"{
+				packetMap["content"] = content
+			}
+			dataStr := JsonEncode(packetMap)
+			fmt.Println("postToServerRequest: " + dataStr)
+			signature := sha1Encode(dataStr + *tcKey)
+			payloadMap := map[string]interface{}{"data": dataStr, "signature": signature}
+			responseBody,err := postJson(*receiveUrl, payloadMap)
+			if err != nil{
+				fmt.Println(err)
+				// return err
+			}else{
+				fmt.Println("postToServerResponse: " + responseBody)
+				// return nil
+			}
 		}
 	}
 
