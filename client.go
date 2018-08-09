@@ -179,7 +179,7 @@ func serveWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
 	if tunnelIdCheck == 0{
 		conn.Close()
 	}else{
-		client := &Client{hub: hub, tunnelId: tunnelId, conn: conn, send: make(chan []byte, 256)}
+		client := &Client{hub: hub, tunnelId: tunnelId, conn: conn, send: make(chan []byte, 256), postToServerChan: make(chan map[string]string)}
 		client.hub.register <- client
 
 		// Allow collection of memory referenced by the caller by doing all work in
