@@ -158,12 +158,9 @@ func (c *Client) postToServer(){
 			responseBody,err := postJson(*receiveUrl, payloadMap)
 			if err != nil{
 				fmt.Println(err)
-				// return err
 			}else{
 				fmt.Println("postToServerResponse: " + responseBody)
-				// return nil
 			}
-		// case exit <- c.postToServerChan:
 		}
 	}
 
