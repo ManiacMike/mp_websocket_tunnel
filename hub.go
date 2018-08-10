@@ -98,9 +98,9 @@ func (h *Hub) run() {
 			if _, ok := h.clients[tunnelId]; ok {
 				h.tunnelIdPool[tunnelId].active = false
 				h.tunnelIdPool[tunnelId].lastActiveTime = time.Now().Unix()
-				delete(h.clients, tunnelId)
 				close(client.messageSendChan)
 				close(client.postToServerChan)
+				delete(h.clients, tunnelId)
 			}
 		case message := <-h.broadcast:
 			for _,client := range h.clients {
