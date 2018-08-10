@@ -59,7 +59,6 @@ type Client struct {
 // reads from this goroutine.
 func (c *Client) readPump() {
 	defer func() {
-		c.postToServerChan <- map[string]string{"packetType": "close"}
 		c.hub.unregister <- c
 		c.conn.Close()
 	}()

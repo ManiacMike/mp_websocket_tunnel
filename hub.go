@@ -2,7 +2,7 @@ package main
 
 import (
 	// "encoding/json"
-	// "fmt"
+	"fmt"
 	"time"
 )
 
@@ -96,8 +96,10 @@ func (h *Hub) run() {
 		case client := <-h.unregister:
 			tunnelId := client.tunnelId
 			if _, ok := h.clients[tunnelId]; ok {
+				fmt.Println("unregister")
 				h.tunnelIdPool[tunnelId].active = false
 				h.tunnelIdPool[tunnelId].lastActiveTime = time.Now().Unix()
+				client.postToServerChan <- map[string]string{"packetType": "close"}
 				close(client.messageSendChan)
 				close(client.postToServerChan)
 				delete(h.clients, tunnelId)
