@@ -160,6 +160,7 @@ func (c *Client) postToServer(){
 				fmt.Println("postToServerResponse: " + responseBody)
 				// return nil
 			}
+		// case exit <- c.postToServerChan:
 		}
 	}
 
