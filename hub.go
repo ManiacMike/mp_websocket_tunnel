@@ -109,7 +109,7 @@ func (h *Hub) run() {
 			}
 		case <-ticker.C:
 			h.clearExpiredTunnelId()
-			t2.Reset(clearExpiredTunnelIdInterval)
+			ticker.Reset(clearExpiredTunnelIdInterval)
 		}
 	}
 }

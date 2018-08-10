@@ -184,7 +184,7 @@ func serveWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
 			tunnelId: tunnelId, 
 			conn: conn, 
 			messageSendChan: make(chan []byte, 256), 
-			postToServerChan: make(chan map[string]string)
+			postToServerChan: make(chan map[string]string),
 		}
 		client.hub.register <- client
 
