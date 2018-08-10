@@ -107,12 +107,11 @@ func (h *Hub) run() {
 				select {
 				case client.messageSendChan <- message:
 				default:
-					h.unregister <- client
-					// h.tunnelIdPool[tunnelId].active = false
-					// h.tunnelIdPool[tunnelId].lastActiveTime = time.Now().Unix()
-					// close(client.messageSendChan)
-					// close(client.postToServerChan)
-					// delete(h.clients, client.tunnelId)
+					h.tunnelIdPool[tunnelId].active = false
+					h.tunnelIdPool[tunnelId].lastActiveTime = time.Now().Unix()
+					close(client.messageSendChan)
+					close(client.postToServerChan)
+					delete(h.clients, client.tunnelId)
 				}
 			}
 		case <-ticker.C:
