@@ -140,7 +140,10 @@ func (c *Client) postToServer(){
 	//packetType string, content string
 	for {
 		select {
-		case poster := <-c.postToServerChan:
+		case poster, ok := <-c.postToServerChan:
+			if !ok{
+				return 
+			}
 			fmt.Println(poster)
 			packetType := poster["packetType"]
 			content := poster["content"]
