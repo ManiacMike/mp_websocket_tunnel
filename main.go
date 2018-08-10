@@ -38,6 +38,7 @@ var host = flag.String("h", "127.0.0.1", "http service host")
 var port = flag.String("p", "8002", "http service port")
 var tcKey = flag.String("k", "", "sign key")
 var receiveUrl = flag.String("r", "", "backend receive url")
+var tunnelIdExpire = flag.Int("e", 3600, "backend receive url")
 
 func main() {
 

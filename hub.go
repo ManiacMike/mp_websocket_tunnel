@@ -2,7 +2,7 @@ package main
 
 import (
 	// "encoding/json"
-	"fmt"
+	// "fmt"
 	"time"
 )
 
@@ -68,7 +68,11 @@ func (h *Hub) checkTunnelId(tunnelId string) int {
 }
 
 func (h *Hub) clearExpiredTunnelId(){
-	fmt.Println(12345)
+	for tunnelIdStr, tunnelId := range h.tunnelIdPool{
+		if tunnelId.active == false && (time.Now().Unix() - tunnelId.lastActiveTime > int64(*tunnelIdExpire)){
+			delete(h.tunnelIdPool, tunnelIdStr)
+		}
+	}
 }
 
 func (h *Hub) sendByTunnelId(tunnelId string, message string) error{
@@ -80,7 +84,7 @@ func (h *Hub) sendByTunnelId(tunnelId string, message string) error{
 }
 
 func (h *Hub) run() {
-	clearExpiredTunnelIdInterval := time.Second * 5
+	clearExpiredTunnelIdInterval := time.Second * 60
 	ticker := time.NewTimer(clearExpiredTunnelIdInterval)
 
 	for {
@@ -93,6 +97,7 @@ func (h *Hub) run() {
 			tunnelId := client.tunnelId
 			if _, ok := h.clients[tunnelId]; ok {
 				h.tunnelIdPool[tunnelId].active = false
+				h.tunnelIdPool[tunnelId].lastActiveTime = time.Now().Unix()
 				delete(h.clients, tunnelId)
 				close(client.messageSendChan)
 				close(client.postToServerChan)
@@ -102,9 +107,12 @@ func (h *Hub) run() {
 				select {
 				case client.messageSendChan <- message:
 				default:
-					close(client.messageSendChan)
-					close(client.postToServerChan)
-					delete(h.clients, client.tunnelId)
+					h.unregister <- client
+					// h.tunnelIdPool[tunnelId].active = false
+					// h.tunnelIdPool[tunnelId].lastActiveTime = time.Now().Unix()
+					// close(client.messageSendChan)
+					// close(client.postToServerChan)
+					// delete(h.clients, client.tunnelId)
 				}
 			}
 		case <-ticker.C:
