@@ -2,7 +2,7 @@ package main
 
 import (
 	// "encoding/json"
-	// "fmt"
+	"fmt"
 	"time"
 )
 
@@ -67,67 +67,49 @@ func (h *Hub) checkTunnelId(tunnelId string) int {
 
 }
 
+func (h *Hub) clearExpiredTunnelId(){
+	fmt.Println(12345)
+}
+
 func (h *Hub) sendByTunnelId(tunnelId string, message string) error{
 	if h.tunnelIdPool[tunnelId] == nil || h.tunnelIdPool[tunnelId].active == false{
 		return Error("invalid tunnelId")
 	}
-	h.clients[tunnelId].send <- []byte(message)
+	h.clients[tunnelId].messageSendChan <- []byte(message)
 	return nil
 }
 
 func (h *Hub) run() {
+	clearExpiredTunnelIdInterval := time.Second * 5
+	ticker := time.NewTimer(clearExpiredTunnelIdInterval)
+
 	for {
 		select {
 		case client := <-h.register:
-			// welcomeMessage := []byte("hello")
-			// client.send <- welcomeMessage
 			h.clients[client.tunnelId] = client
 			h.tunnelIdPool[client.tunnelId].active = true
-			// userCountMessage := map[string]interface{}{
-			// 	"type":       "user_count",
-			// 	"user_count": len(h.clients),
-			// }
-			// userCountMessagebody, _ := json.Marshal(userCountMessage)
-			// fmt.Println(userCountMessage)
-			// for client := range h.clients {
-			// 	select {
-			// 	case client.send <- userCountMessagebody:
-			// 	default:
-			// 		close(client.send)
-			// 		delete(h.clients, client)
-			// 	}
-			// }
+
 		case client := <-h.unregister:
 			tunnelId := client.tunnelId
 			if _, ok := h.clients[tunnelId]; ok {
 				h.tunnelIdPool[tunnelId].active = false
 				delete(h.clients, tunnelId)
-				close(client.send)
+				close(client.messageSendChan)
 				close(client.postToServerChan)
 			}
-			// userCountMessage := map[string]interface{}{
-			// 	"type":       "user_count",
-			// 	"user_count": len(h.clients),
-			// }
-			// userCountMessagebody, _ := json.Marshal(userCountMessage)
-			// fmt.Println(userCountMessage)
-			// for client := range h.clients {
-			// 	select {
-			// 	case client.send <- userCountMessagebody:
-			// 	default:
-			// 		close(client.send)
-			// 		delete(h.clients, client)
-			// 	}
-			// }
 		case message := <-h.broadcast:
 			for _,client := range h.clients {
 				select {
-				case client.send <- message:
+				case client.messageSendChan <- message:
 				default:
-					close(client.send)
+					close(client.messageSendChan)
+					close(client.postToServerChan)
 					delete(h.clients, client.tunnelId)
 				}
 			}
+		case <-ticker.C:
+			h.clearExpiredTunnelId()
+			t2.Reset(clearExpiredTunnelIdInterval)
 		}
 	}
 }

@@ -47,7 +47,7 @@ type Client struct {
 	conn *websocket.Conn
 
 	// Buffered channel of outbound messages.
-	send chan []byte
+	messageSendChan chan []byte
 
 	postToServerChan chan map[string]string
 }
@@ -78,7 +78,7 @@ func (c *Client) readPump() {
 		
 		fmt.Println("readPump: " + string(message))
 		if string(message) == "ping"{
-			c.send <- []byte("pong")
+			c.messageSendChan <- []byte("pong")
 		}else{
 			s := strings.Split(string(message), ":")
 			if s[0] == "message"{
@@ -103,7 +103,7 @@ func (c *Client) writePump() {
 	}()
 	for {
 		select {
-		case message, ok := <-c.send:
+		case message, ok := <-c.messageSendChan:
 			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
 			if !ok {
 				// The hub closed the channel.
@@ -118,10 +118,10 @@ func (c *Client) writePump() {
 			w.Write(message)
 
 			// Add queued chat messages to the current websocket message.
-			n := len(c.send)
+			n := len(c.messageSendChan)
 			for i := 0; i < n; i++ {
 				w.Write(newline)
-				w.Write(<-c.send)
+				w.Write(<-c.messageSendChan)
 			}
 
 			if err := w.Close(); err != nil {
@@ -179,7 +179,13 @@ func serveWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
 	if tunnelIdCheck == 0{
 		conn.Close()
 	}else{
-		client := &Client{hub: hub, tunnelId: tunnelId, conn: conn, send: make(chan []byte, 256), postToServerChan: make(chan map[string]string)}
+		client := &Client{
+			hub: hub, 
+			tunnelId: tunnelId, 
+			conn: conn, 
+			messageSendChan: make(chan []byte, 256), 
+			postToServerChan: make(chan map[string]string)
+		}
 		client.hub.register <- client
 
 		// Allow collection of memory referenced by the caller by doing all work in
