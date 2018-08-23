@@ -33,12 +33,12 @@ func StaticServer(w http.ResponseWriter, req *http.Request) {
 	return
 }
 
-var wsdomain = flag.String("d", "127.0.0.1", "ws service host")
-var host = flag.String("h", "127.0.0.1", "http service host")
-var port = flag.String("p", "8002", "http service port")
+var wsdomain = flag.String("d", "127.0.0.1", "gateway service host")
+var host = flag.String("h", "127.0.0.1", "backend service host")
+var port = flag.String("p", "8002", "gateway service port")
 var tcKey = flag.String("k", "", "sign key")
 var receiveUrl = flag.String("r", "", "backend receive url")
-var tunnelIdExpire = flag.Int("e", 3600, "backend receive url")
+var tunnelIdExpire = flag.Int("e", 3600, "tunnel id expire in second")
 
 func main() {
 
